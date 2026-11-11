@@ -28,6 +28,7 @@ import { ShareModal } from '../features/share/ShareModal';
 import { MergeModal } from '../features/share/MergeModal';
 import { CreateProjectModal } from '../features/projects/CreateProjectModal';
 import { ProjectListModal } from '../features/projects/ProjectListModal';
+import { ProjectSettingsModal } from '../features/projects/ProjectSettingsModal';
 
 import {
   Calendar,
@@ -38,6 +39,7 @@ import {
   Moon,
   Plus,
   Share2,
+  SlidersHorizontal,
   Sparkles,
   Sun,
   User,
@@ -83,6 +85,7 @@ export const AppContent: React.FC = () => {
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isProjectListModalOpen, setIsProjectListModalOpen] = useState(false);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
   // Merge modal state
   const [incomingConflictBoard, setIncomingConflictBoard] = useState<Board | null>(null);
@@ -344,15 +347,25 @@ export const AppContent: React.FC = () => {
               </span>
             </div>
 
-            {/* Project Switcher Pill */}
+            {/* Project Switcher Pill & Settings */}
             {activeBoard && (
-              <button
-                onClick={() => setIsProjectListModalOpen(true)}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-slate-50 dark:bg-slate-800/60 text-xs font-semibold text-slate-800 dark:text-slate-200 transition-all max-w-[220px] sm:max-w-[280px]"
-              >
-                <span className="truncate">{activeBoard.name}</span>
-                <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-              </button>
+              <div className="flex items-center gap-1 min-w-0">
+                <button
+                  onClick={() => setIsProjectListModalOpen(true)}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-slate-50 dark:bg-slate-800/60 text-xs font-semibold text-slate-800 dark:text-slate-200 transition-all max-w-[200px] sm:max-w-[260px]"
+                >
+                  <span className="truncate">{activeBoard.name}</span>
+                  <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                </button>
+                <button
+                  onClick={() => setIsSettingsModalOpen(true)}
+                  title="Project & Milestone Settings"
+                  aria-label="Project & Milestone Settings"
+                  className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors shrink-0"
+                >
+                  <SlidersHorizontal className="w-3.5 h-3.5" />
+                </button>
+              </div>
             )}
           </div>
 
@@ -626,6 +639,17 @@ export const AppContent: React.FC = () => {
         onOpenCreate={() => setIsCreateModalOpen(true)}
         onLoadDemo={handleLoadDemo}
       />
+
+      {/* Project & Milestone Settings Modal */}
+      {activeBoard && (
+        <ProjectSettingsModal
+          isOpen={isSettingsModalOpen}
+          onClose={() => setIsSettingsModalOpen(false)}
+          board={activeBoard}
+          currentActorId={currentActorId}
+          onSave={handleUpdateBoard}
+        />
+      )}
     </div>
   );
 };

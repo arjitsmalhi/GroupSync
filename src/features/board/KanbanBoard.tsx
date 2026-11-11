@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
-import { Board, Member, Milestone, Task, TaskStatus, createId } from '../../lib/schema';
+import { Board, Member, Milestone, Task, TaskStatus, createId, MEMBER_PALETTE } from '../../lib/schema';
 import { TaskCard } from './TaskCard';
 import { TaskModal } from './TaskModal';
 import { FilterState } from './BoardFilters';
@@ -278,6 +278,63 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
     });
   };
 
+  // Add custom member on the fly
+  const handleAddMember = (name: string): Member => {
+    const nextColor = MEMBER_PALETTE[board.members.length % MEMBER_PALETTE.length].bg;
+    const newMember: Member = {
+      id: createId('mem'),
+      name: name.trim(),
+      color: nextColor,
+    };
+    const nowIso = new Date().toISOString();
+    const updatedBoard: Board = {
+      ...board,
+      members: [...board.members, newMember],
+      log: [
+        ...board.log,
+        {
+          id: createId('log'),
+          ts: nowIso,
+          actorId: currentActorId,
+          type: 'member_added',
+          taskId: null,
+          summary: `Added team member "${newMember.name}"`,
+        },
+      ],
+      updatedAt: nowIso,
+    };
+    onUpdateBoard(updatedBoard);
+    return newMember;
+  };
+
+  // Add custom target milestone on the fly
+  const handleAddMilestone = (name: string, percent: number): Milestone => {
+    const newMilestone: Milestone = {
+      id: createId('ms'),
+      name: name.trim(),
+      percent,
+    };
+    const nowIso = new Date().toISOString();
+    const updatedBoard: Board = {
+      ...board,
+      milestones: [...board.milestones, newMilestone].sort((a, b) => a.percent - b.percent),
+      log: [
+        ...board.log,
+        {
+          id: createId('log'),
+          ts: nowIso,
+          actorId: currentActorId,
+          type: 'milestone_changed',
+          taskId: null,
+          summary: `Created target milestone "${newMilestone.name}" (${percent}%)`,
+        },
+      ],
+      updatedAt: nowIso,
+    };
+    onUpdateBoard(updatedBoard);
+    return newMilestone;
+  };
+
   // Soft delete with Undo
   const handleDeleteTask = (taskId: string) => {
     const taskToDelete = board.tasks.find((t) => t.id === taskId);
@@ -488,6 +545,8 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
         members={board.members}
         milestones={board.milestones}
         onSave={handleSaveModalTask}
+        onAddMember={handleAddMember}
+        onAddMilestone={handleAddMilestone}
       />
     </div>
   );
