@@ -335,6 +335,49 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
     return newMilestone;
   };
 
+  // Direct 1-tap status transition
+  const handleMoveStatus = (taskId: string, newStatus: TaskStatus) => {
+    const target = board.tasks.find((t) => t.id === taskId);
+    if (!target || target.status === newStatus) return;
+
+    const nowIso = new Date().toISOString();
+    const statusLabels: Record<TaskStatus, string> = {
+      todo: 'To Do',
+      doing: 'In Progress',
+      done: 'Completed',
+    };
+
+    const nextTasks = board.tasks.map((t) =>
+      t.id === taskId
+        ? {
+            ...t,
+            status: newStatus,
+            updatedAt: nowIso,
+            completedAt: newStatus === 'done' ? t.completedAt || nowIso : null,
+          }
+        : t
+    );
+
+    const nextLog = [
+      ...board.log,
+      {
+        id: createId('log'),
+        ts: nowIso,
+        actorId: currentActorId,
+        type: 'task_moved' as const,
+        taskId: target.id,
+        summary: `Moved "${target.title}" to ${statusLabels[newStatus]}`,
+      },
+    ];
+
+    onUpdateBoard({
+      ...board,
+      tasks: nextTasks,
+      log: nextLog,
+      updatedAt: nowIso,
+    });
+  };
+
   // Soft delete with Undo
   const handleDeleteTask = (taskId: string) => {
     const taskToDelete = board.tasks.find((t) => t.id === taskId);
@@ -512,6 +555,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
                                   setIsModalOpen(true);
                                 }}
                                 onDelete={handleDeleteTask}
+                                onMoveStatus={handleMoveStatus}
                               />
                             </div>
                           )}

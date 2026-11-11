@@ -1,7 +1,7 @@
 import React from 'react';
-import { Member, Milestone, Task } from '../../lib/schema';
+import { Member, Milestone, Task, TaskStatus } from '../../lib/schema';
 import { PriorityBadge, EffortBadge } from '../../ui/Badge';
-import { AlertCircle, Calendar, Edit3, Trash2, User } from 'lucide-react';
+import { AlertCircle, Calendar, Edit3, Trash2, User, ArrowRight, CheckCircle2, RotateCcw } from 'lucide-react';
 import { parseDateSafe, formatDateUtc } from '../../lib/milestones';
 
 export interface TaskCardProps {
@@ -10,6 +10,7 @@ export interface TaskCardProps {
   milestones: Milestone[];
   onEdit: (task: Task) => void;
   onDelete: (taskId: string) => void;
+  onMoveStatus?: (taskId: string, newStatus: TaskStatus) => void;
   isDragging?: boolean;
 }
 
@@ -19,6 +20,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   milestones,
   onEdit,
   onDelete,
+  onMoveStatus,
   isDragging = false,
 }) => {
   const assignee = members.find((m) => m.id === task.assigneeId);
@@ -120,24 +122,73 @@ export const TaskCard: React.FC<TaskCardProps> = ({
           </div>
         )}
 
-        {/* Due Date & Overdue badge */}
-        {task.dueDate ? (
-          <div
-            className={`inline-flex items-center gap-1 text-[11px] font-medium px-1.5 py-0.5 rounded ${
-              isOverdue
-                ? 'text-rose-700 bg-rose-50 dark:bg-rose-950/50 dark:text-rose-300 font-semibold'
-                : 'text-slate-500 dark:text-slate-400'
-            }`}
-            title={isOverdue ? 'Overdue!' : `Due ${task.dueDate}`}
-          >
-            {isOverdue ? (
-              <AlertCircle className="w-3 h-3 text-rose-600 dark:text-rose-400 shrink-0" />
-            ) : (
-              <Calendar className="w-3 h-3 shrink-0" />
-            )}
-            <span>{task.dueDate}</span>
-          </div>
-        ) : null}
+        {/* Due Date & Overdue badge & Quick Move */}
+        <div className="flex items-center gap-1.5">
+          {task.dueDate ? (
+            <div
+              className={`inline-flex items-center gap-1 text-[11px] font-medium px-1.5 py-0.5 rounded ${
+                isOverdue
+                  ? 'text-rose-700 bg-rose-50 dark:bg-rose-950/50 dark:text-rose-300 font-semibold'
+                  : 'text-slate-500 dark:text-slate-400'
+              }`}
+              title={isOverdue ? 'Overdue!' : `Due ${task.dueDate}`}
+            >
+              {isOverdue ? (
+                <AlertCircle className="w-3 h-3 text-rose-600 dark:text-rose-400 shrink-0" />
+              ) : (
+                <Calendar className="w-3 h-3 shrink-0" />
+              )}
+              <span>{task.dueDate}</span>
+            </div>
+          ) : null}
+
+          {onMoveStatus && (
+            <div className="flex items-center">
+              {task.status === 'todo' && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onMoveStatus(task.id, 'doing');
+                  }}
+                  title="Move to In Progress"
+                  aria-label="Move to In Progress"
+                  className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 rounded transition-colors"
+                >
+                  <span>Start</span>
+                  <ArrowRight className="w-2.5 h-2.5" />
+                </button>
+              )}
+              {task.status === 'doing' && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onMoveStatus(task.id, 'done');
+                  }}
+                  title="Mark as Completed"
+                  aria-label="Mark as Completed"
+                  className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 rounded transition-colors"
+                >
+                  <CheckCircle2 className="w-2.5 h-2.5" />
+                  <span>Done</span>
+                </button>
+              )}
+              {task.status === 'done' && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onMoveStatus(task.id, 'doing');
+                  }}
+                  title="Reopen task"
+                  aria-label="Reopen task"
+                  className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 bg-slate-100 dark:bg-slate-800 rounded transition-colors"
+                >
+                  <RotateCcw className="w-2.5 h-2.5" />
+                  <span>Reopen</span>
+                </button>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
